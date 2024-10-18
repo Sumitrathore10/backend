@@ -8,25 +8,20 @@ const registerUser = asynchandler(async (req, res) => {
   const { email, username, fullname, password } = req.body;
 
   if (
-    [email, username, fullname, password].some((field) => {
-      field?.trim() === "";
-    })
-  ) {
-    throw new apiError(400, "All fields are required !!!");
-  }
+    [email, username, fullname, password].some(field => field?.trim() === "")){
+throw new apiError(400, "All fields are required !!!");
+    }
+    
+  // email valdition
 
-  //   email valdition
+  if (!email || !email.trim().endsWith("@gmail.com")) {
+    throw new apiError(400, "Invalid email format. Only @gmail.com is allowed.");
+}
 
-  if (!email || !email.trim().endsWith("@gamil.com")) {
-    throw new apiError(
-      400,
-      "Invalid email format. Only @gmail.com is allowed."
-    );
-  }
 
   // check user existance
 
-  const userExistance = User.findOne({
+  const userExistance = await User.findOne({
     $or: [{ username }, { email }],
   });
 
@@ -37,18 +32,34 @@ const registerUser = asynchandler(async (req, res) => {
   // add files and images
 
   const avatarlocalpath = req.files?.avatar[0]?.path;
-  const coverimagelocalpath = req.files?.cover_image[0]?.path;
 
   if (!avatarlocalpath) {
     throw new apiError(400, "avatar files is required !!!");
   }
 
+  // let avatarlocalpath;
+  // if(req.files && Array.isArray(req.files.avatar) && req.files.avatar.length > 0){
+  //   avatarlocalpath = req.files.avatar[0].path;
+  // }
+  // const coverimagelocalpath = req.files?.cover_image[0]?.path;
+
+  let coverimagelocalpath  = "";
+  if(req.files && Array.isArray(req.files.coverimage) && req.files.coverimage.length > 0) {
+    coverimagelocalpath = req.files.coverimage[0].path;
+  }
+
+  
+
   const avatar = await fileUploadOnCloudinary(avatarlocalpath);
+  
+  if (!avatar) {
+    throw new apiError(500, "Avatar file upload is failed !!!");
+  }
+
+
   const coverimage = await fileUploadOnCloudinary(coverimagelocalpath);
 
-  if (!avatr) {
-    throw new apiError(500, "Avatar file is required");
-  }
+  
 
   const user = await User.create({
     fullname,

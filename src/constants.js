@@ -1,1 +1,1 @@
-export const DB_NAME = "maja-tube"
+export const DB_NAME = "maja_tube";
